@@ -14,6 +14,7 @@ table = "vz"
 username = "python"
 password = "Pi1Ap4tWjX9CzRdk"
 regularpatsel = "SELECT id,mem,us_new,quota From "
+update_vsu = "gora"
 
 def getCpuNum():
   try:
@@ -68,6 +69,18 @@ def SelectData(conn):
     finally :
         conn.cursor().close()
 
+def UpdateData(conn,sql):
+    try:
+	cursor = conn.cursor()
+	mycursor.execute(sql)
+	conn.commit()
+	print(mycursor.rowcount, "record(s) affected")
+    except:
+	print("error mysql update")
+    finally:
+        conn.cursor().close()
+
+
 def FormulaUpdate(Mem,CpuUsage,Space):
     CpuNum = getCpuNum()
     CpuMhz = getCpuMHz()
@@ -93,9 +106,11 @@ try :
 	id_unparse = format(item['id'])		#id
         mem_unparse = format(item['mem'])	#mem
         usnew_unparse = format(item['us_new'])  #cpu usage
-	quota_unparse = format(item['quota']) 	#space gb
+	quota_unparse = format(item['quota']) 	#space db
         VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
 	print("VSU = ",VSU)
+	sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE "
+	print("sqlupdate = ",sqlupdate)
 except:
     print("sql error")
 
