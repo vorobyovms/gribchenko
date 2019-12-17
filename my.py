@@ -7,14 +7,17 @@ import MySQLdb as my
 import MySQLdb.cursors
 import json
 import subprocess
+import rrdtool
+import datetime
 
-host = "backup.pravogarant.com"
-dbname = "vctest"
-table = "vz"
-username = "python"
-password = "Pi1Ap4tWjX9CzRdk"
-regularpatsel = "SELECT id,mem,us_new,quota From "
-update_vsu = "gora"
+host = "127.0.0.1"
+dbname = "vtl"
+table = "vzstat"
+username = "vorobyov"
+password = "rfmd2EAA1997"
+regularpatsel = "SELECT vzid,unxtime,mem,us_new,quota From "
+update_vsu = "vzq"
+time_field = "time"
 
 def getCpuNum():
   try:
@@ -44,25 +47,27 @@ def ReturnCursorConnect():
         print("error return connect function return connect = ",e)
     return conn
 
-def SelectData(conn):
+def SelectData(conn,fdate,ldate):
     try :
 	arrayres = []
         cursor = conn.cursor()
-        queryfordatabase = regularpatsel + table
+        queryfordatabase = regularpatsel + table + " WHERE DATE(" + time_field + ") BETWEEN " + "'" + fdate + "' AND " + "'" + ldate + "'"
+	print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
         for field in rows:
 	    jsonlocal={}
-            id = field['id']
+            vzid = field['vzid']
+            unixtime = field['unxtime']
             mem = field['mem']
             us_new = field['us_new']
             quota = field['quota']
-	    jsonlocal["id"] = id
+	    jsonlocal["vzid"] = vzid
+	    jsonlocal["unxtime"] = unixtime
 	    jsonlocal["mem"] = mem
             jsonlocal["us_new"] = us_new
             jsonlocal["quota"] = quota
 	    arrayres.append(jsonlocal)
-	#return json.dumps(arrayres)
 	return arrayres
     except my.Error as e :
         print("error select data function select data = ",e)
@@ -70,11 +75,12 @@ def SelectData(conn):
         conn.cursor().close()
 
 def UpdateData(conn,sql):
+    print("connection update = ",conn)
+    print("sql update = ",sql)
     try:
 	cursor = conn.cursor()
-	mycursor.execute(sql)
+	cursor.execute(sql)
 	conn.commit()
-	print(mycursor.rowcount, "record(s) affected")
     except:
 	print("error mysql update")
     finally:
@@ -96,24 +102,43 @@ def FormulaUpdate(Mem,CpuUsage,Space):
     except :
         print("math error operation")
 
-try :
-    myconnect = ReturnCursorConnect()
-    array = SelectData(myconnect)
-    print("array = ",array)
 
-    #begin procedure update
-    for item in array:
-	id_unparse = format(item['id'])		#id
-        mem_unparse = format(item['mem'])	#mem
-        usnew_unparse = format(item['us_new'])  #cpu usage
-	quota_unparse = format(item['quota']) 	#space db
-        VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
-	print("VSU = ",VSU)
-	sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE "
-	print("sqlupdate = ",sqlupdate)
-except:
-    print("sql error")
 
-finally :
+
+try:
+    date_format = '%Y-%m-%d'
+    if len(sys.argv) < 3:
+        print("Error Not all parameter")
+        sys.exit(1)
+    fdate = sys.argv[1]
+    sdate = sys.argv[2]
+    print("fdate = ",fdate)
+    print("sdate = ",sdate)
+    date_obj = datetime.datetime.strptime(fdate, date_format)
+    print("fdate = ",date_obj)
+    date_obj1 = datetime.datetime.strptime(sdate, date_format)
+    print("sdate",date_obj1)
+    try :
+        print("Begin")
+        myconnect = ReturnCursorConnect()
+        array = SelectData(myconnect,fdate,sdate)
+        for item in array:
+            vzid_unparse = format(item['vzid'])     #vzid
+            unixtime = format(item['unxtime'])      #unixtime
+            mem_unparse = format(item['mem'])       #mem
+            usnew_unparse = format(item['us_new'])  #cpu usage
+            quota_unparse = format(item['quota'])   #space db
+            VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
+            print("VSU = ",VSU)
+            sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE unxtime = " + unixtime + " AND vzid = " + vzid_unparse
+            print("sqlupdate = ",sqlupdate)
+            UpdateData(myconnect,sqlupdate)
+    except :
+        print("sql error")
+    finally :
         myconnect.close()
 
+except ValueError:
+    print("Incorrect data format, should be YYYY-MM-DD")
+finally :
+    sys.exit(1)
