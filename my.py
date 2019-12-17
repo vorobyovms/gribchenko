@@ -15,9 +15,11 @@ dbname = "vtl"
 table = "vzstat"
 username = "vorobyov"
 password = "rfmd2EAA1997"
-regularpatsel = "SELECT vzid,unxtime,mem,us_new,quota From "
+regularpatsel = "SELECT tpsread,tpswrite,us,vzid,unxtime,mem,us_new,quota From "
 update_vsu = "vzq"
 time_field = "time"
+global RRDsPath
+RRDsPath = '/var/www/stats/rrd/'
 
 def getCpuNum():
   try:
@@ -62,11 +64,17 @@ def SelectData(conn,fdate,ldate):
             mem = field['mem']
             us_new = field['us_new']
             quota = field['quota']
+	    tpsread = field['tpsread']
+	    tpswrite = field['tpswrite']
+            cpucycles = field['us']
 	    jsonlocal["vzid"] = vzid
 	    jsonlocal["unxtime"] = unixtime
 	    jsonlocal["mem"] = mem
             jsonlocal["us_new"] = us_new
             jsonlocal["quota"] = quota
+	    jsonlocal["tpsread"] = tpsread
+            jsonlocal["tpswrite"] = tpswrite
+	    jsonlocal["cpucycles"] = cpucycles
 	    arrayres.append(jsonlocal)
 	return arrayres
     except my.Error as e :
@@ -102,8 +110,27 @@ def FormulaUpdate(Mem,CpuUsage,Space):
     except :
         print("math error operation")
 
+def writeToRRD(ctid, Mem, CpuCycles, CpuUsage, TpsRead, TpsWrite, VSU):
+    rrdPath = '%s%s.rrd' % (RRDsPath, ctid)
+    rrdParams = 'N:%s:%s:%s:%s:%s:%s' % (CpuCycles, CpuUsage, Mem, TpsWrite, TpsRead, VSU)
+    if not os.path.exists(rrdPath):
+        try:
+            rrdtool.create(str(rrdPath), '--step', '300', '--start', '0',
+                'DS:us:GAUGE:600:U:U',
+                'DS:us_new:GAUGE:600:U:U',
+                'DS:mem:GAUGE:600:U:U',
+                'DS:tpswrite:GAUGE:600:U:U',
+                'DS:tpsread:GAUGE:600:U:U',
+                'DS:sigma:GAUGE:600:U:U',
+                'RRA:AVERAGE:0.5:1:105408',
+                'RRA:MAX:0.5:1:105408')
+        except:
+            print('Error, failed to create RRD for %s.' % (ctid))
 
-
+    try:
+        rrdtool.update(str(rrdPath), rrdParams)
+    except:
+        print('Error, failed to update RRD for %s.' % (ctid))
 
 try:
     date_format = '%Y-%m-%d'
@@ -123,18 +150,24 @@ try:
         myconnect = ReturnCursorConnect()
         array = SelectData(myconnect,fdate,sdate)
         for item in array:
-            vzid_unparse = format(item['vzid'])     #vzid
-            unixtime = format(item['unxtime'])      #unixtime
-            mem_unparse = format(item['mem'])       #mem
-            usnew_unparse = format(item['us_new'])  #cpu usage
-            quota_unparse = format(item['quota'])   #space db
+            vzid_unparse = format(item['vzid'])           #vzid
+            unixtime = format(item['unxtime'])            #unixtime
+            mem_unparse = format(item['mem'])             #mem
+            usnew_unparse = format(item['us_new'])        #cpu usage
+            quota_unparse = format(item['quota'])         #space db
+	    unparser_tpsread = format(item['tpsread'])    #tpsread
+	    unparse_tpswrite = format(item['tpswrite'])   #tpswrite
+	    unparse_cpucycles = format(item['cpucycles']) #cpucycles
+
             VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
             print("VSU = ",VSU)
             sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE unxtime = " + unixtime + " AND vzid = " + vzid_unparse
             print("sqlupdate = ",sqlupdate)
             UpdateData(myconnect,sqlupdate)
+	    #writeToRRD(ctid, Mem, CpuCycles, CpuUsage, TpsRead, TpsWrite, VSU)
+	    writeToRRD(vzid_unparse,mem_unparse,unparse_cpucycles,usnew_unparse,unparser_tpsread,unparse_tpswrite,VSU)
     except :
-        print("sql error")
+        print("sql error at begin")
     finally :
         myconnect.close()
 
