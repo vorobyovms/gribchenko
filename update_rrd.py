@@ -9,6 +9,7 @@ import json
 import subprocess
 import rrdtool
 import datetime
+import fileinput
 
 host = "127.0.0.1"
 dbname = "vtl"
@@ -90,9 +91,84 @@ def writeToRRD(input,ctid):
         except :
             print('Error, failed to create RRD for %s.' % (ctid))
 
+    #backup file create
+    filebackup = RRDsPath + ctid + "_backup.xml"
+    command_createbackupfile = "rrdtool dump " + rrdPath + " " + filebackup
+    print("command create backup = ",command_createbackupfile)
+
+    #delete file main
+    command_delete = "rm " + rrdPath
+    print("command delete  = ",command_delete)
+
+
+    #backupfile restore
+    command_restorefombackup = "rrdtool restore " +  filebackup + " " + rrdPath
+    print("command restore backup = ",command_restorefombackup)
+
+    #backupfile delete
+    command_delete1 = "rm " + filebackup
+    print("command delete1  = ",command_delete1)
+
+    try:
+        code = os.popen(command_createbackupfile)
+        now = code.read()
+    except:
+        print("can not make backupfile")
+	sys.exit(1)
+
+    #change field
+    command_lastupdate = "rrdtool dump " + rrdPath + " | grep lastupdate"
+    try:
+        code = os.popen(command_lastupdate)
+        now = code.read()
+        now = now.replace("\r","")
+        now = now.replace("\t","")
+        now = now.replace("\n","")
+	print("now = ",now)
+
+        # Read in the file
+        with open(filebackup, 'r') as file :
+            filedata = file.read()
+            filedata = filedata.replace(now, '<lastupdate>0</lastupdate>')
+        with open(filebackup, 'w') as file:
+            file.write(filedata)
+
+    except:
+        print("can not change field")
+        sys.exit(1)
+
+    #delete main file
+    try:
+        code = os.popen(command_delete)
+        now = code.read()
+    except:
+        print("can not delete main file")
+        sys.exit(1)
+
+    #restore from backup
+    try:
+        code = os.popen(command_restorefombackup)
+        now = code.read()
+    except:
+        print("couldnot restore main file frombackup")
+        sys.exit(1)
+
+    #delete backup file
+    try:
+        code = os.popen(command_delete1)
+        now = code.read()
+    except:
+        print("can not delete backup file")
+        sys.exit(1)
+
+
+
     for item in input:
+	    print("filebackup = ",filebackup)
+	    print("item = ",item)
             vzid_unparse = format(item['vzid'])           #vzid
             unixtime = format(item['unxtime'])            #unixtime
+	    print("unixtime = ",unixtime)
             mem_unparse = format(item['mem'])             #mem
             usnew_unparse = format(item['us_new'])        #cpu usage
             quota_unparse = format(item['quota'])         #space db
@@ -106,14 +182,13 @@ def writeToRRD(input,ctid):
 	    try:
 	       print("UPDATE FILE = ",rrdPath)
                print("RRD PARAM = ",rrdParams)
-               command = "rrdtool update " + rrdPath  + " " + rrdParams
+               command = "rrdtool update -s " + rrdPath  + " " + rrdParams
 	       print("command rrd update = ",command)
                try:
                    code = os.popen(command)
                    now = code.read()
 	       except:
                    print("can not make rrd update")
-               #rrdtool.update(str(rrdPath), rrdParams)
             except:
     	        print("error update")
 
