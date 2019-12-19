@@ -92,6 +92,7 @@ def SelectDataByVCID(conn,vzid):
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
         for field in rows:
+
             jsonlocal={}
             vzid = field['vzid']
             unixtime = field['unxtime']
@@ -102,6 +103,7 @@ def SelectDataByVCID(conn,vzid):
             tpswrite = field['tpswrite']
             cpucycles = field['us']
 	    vzq = field['vzq']
+
             jsonlocal["vzid"] = vzid
             jsonlocal["unxtime"] = unixtime
             jsonlocal["mem"] = mem
@@ -111,7 +113,9 @@ def SelectDataByVCID(conn,vzid):
             jsonlocal["tpswrite"] = tpswrite
             jsonlocal["cpucycles"] = cpucycles
 	    jsonlocal["vzq"] = vzq
+
             arrayres.append(jsonlocal)
+
         return arrayres
     except my.Error as e :
         print("error select data function select data = ",e)
@@ -151,19 +155,24 @@ def FormulaUpdate(Mem,CpuUsage,Space):
 def writeToRRD(input,ctid):
     rrdPath = '%s%s.rrd' % (RRDsPath, ctid)
     print("rrdPath = ",rrdPath)
-    os.remove(rrdPath)
+
+    try :
+        os.remove(rrdPath)
+    except :
+        print("error remove")
+
     if not os.path.exists(rrdPath):
-        try:
-            rrdtool.create(str(rrdPath), '--step', '60', '--start', '0',
-                'DS:us:GAUGE:600:U:U',
-                'DS:us_new:GAUGE:600:U:U',
-                'DS:mem:GAUGE:600:U:U',
-                'DS:tpswrite:GAUGE:600:U:U',
-                'DS:tpsread:GAUGE:600:U:U',
-                'DS:sigma:GAUGE:600:U:U',
-                'RRA:AVERAGE:0.5:1:105408',
-                'RRA:MAX:0.5:1:1054'
-        except:
+        try :
+	     rrdtool.create(str(rrdPath), '--step', '300', '--start', '0',
+                 'DS:us:GAUGE:600:U:U',
+                 'DS:us_new:GAUGE:600:U:U',
+                 'DS:mem:GAUGE:600:U:U',
+                 'DS:tpswrite:GAUGE:600:U:U',
+                 'DS:tpsread:GAUGE:600:U:U',
+                 'DS:sigma:GAUGE:600:U:U',
+                 'RRA:AVERAGE:0.5:1:105408',
+                 'RRA:MAX:0.5:1:105408')
+        except :
             print('Error, failed to create RRD for %s.' % (ctid))
 
     for item in input:
@@ -230,7 +239,7 @@ try:
 			if long(elementislast) != long(vzid_unparse):
 			    vctid.append(vzid_unparse)
 			    sqlresultbyvid = SelectDataByVCID(myconnect,vzid_unparse)
-			    writeToRRD(sqlresultbyvid,ctid)
+			    writeToRRD(sqlresultbyvid,vzid_unparse)
 
 		    #esli ne poskedniy element
 		    if elementislast > 1:
@@ -241,7 +250,7 @@ try:
                 vctid.append(vzid_unparse)
                 print("vctid array = ",vctid)
 		sqlresultbyvid = SelectDataByVCID(myconnect,vzid_unparse)
-		writeToRRD(sqlresultbyvid,ctid)
+		writeToRRD(sqlresultbyvid,vzid_unparse)
 
 	    #writeToRRD(ctid, Mem, CpuCycles, CpuUsage, TpsRead, TpsWrite, VSU)
 	    #writeToRRD(vzid_unparse,mem_unparse,unparse_cpucycles,usnew_unparse,unparser_tpsread,unparse_tpswrite,VSU)
