@@ -153,19 +153,19 @@ def writeToRRD(input,ctid):
     print("rrdPath = ",rrdPath)
     os.remove(rrdPath)
     if not os.path.exists(rrdPath):
-    try :
-        rrdtool.create(str(rrdPath), '--step', '60', '--start', '0',
-            'DS:us:GAUGE:600:U:U',
-            'DS:us_new:GAUGE:600:U:U',
-            'DS:mem:GAUGE:600:U:U',
-            'DS:tpswrite:GAUGE:600:U:U',
-            'DS:tpsread:GAUGE:600:U:U',
-            'DS:sigma:GAUGE:600:U:U',
-            'RRA:AVERAGE:0.5:1:105408',
-            'RRA:MAX:0.5:1:1054'
-    except :
-        print('Error, failed to create RRD for %s.' % (ctid))
-    #for
+        try:
+            rrdtool.create(str(rrdPath), '--step', '60', '--start', '0',
+                'DS:us:GAUGE:600:U:U',
+                'DS:us_new:GAUGE:600:U:U',
+                'DS:mem:GAUGE:600:U:U',
+                'DS:tpswrite:GAUGE:600:U:U',
+                'DS:tpsread:GAUGE:600:U:U',
+                'DS:sigma:GAUGE:600:U:U',
+                'RRA:AVERAGE:0.5:1:105408',
+                'RRA:MAX:0.5:1:1054'
+        except:
+            print('Error, failed to create RRD for %s.' % (ctid))
+
     for item in input:
             vzid_unparse = format(item['vzid'])           #vzid
             unixtime = format(item['unxtime'])            #unixtime
