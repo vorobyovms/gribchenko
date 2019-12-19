@@ -100,11 +100,20 @@ def writeToRRD(input,ctid):
             unparse_tpswrite = format(item['tpswrite'])   #tpswrite
             unparse_cpucycles = format(item['cpucycles']) #cpucycles
 	    VSU = format(item['vzq'])			  #vsu
-	    rrdParams = '%s:%s:%s:%s:%s:%s:%s' % (unixtime,unparse_cpucycles, usnew_unparse, mem_unparse,unparse_tpsread,unparse_tpswrite, VSU)
-            try:
+	    rrdParams = '%s:%s:%s:%s:%s:%s' % (unparse_cpucycles, usnew_unparse, mem_unparse,unparse_tpsread,unparse_tpswrite, VSU)
+            rrdParams = unixtime + "@" + rrdParams
+            print("rrdparams = ",rrdParams)
+	    try:
 	       print("UPDATE FILE = ",rrdPath)
                print("RRD PARAM = ",rrdParams)
-               rrdtool.update(str(rrdPath), rrdParams)
+               command = "rrdtool update " + rrdPath  + " " + rrdParams
+	       print("command rrd update = ",command)
+               try:
+                   code = os.popen(command)
+                   now = code.read()
+	       except:
+                   print("can not make rrd update")
+               #rrdtool.update(str(rrdPath), rrdParams)
             except:
     	        print("error update")
 
