@@ -55,7 +55,6 @@ def SelectData(conn,fdate,ldate):
 	arrayres = []
         cursor = conn.cursor()
         queryfordatabase = regularpatsel + table + " WHERE DATE(" + time_field + ") BETWEEN " + "'" + fdate + "' AND " + "'" + ldate + "'"
-	print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
         for field in rows:
@@ -88,7 +87,6 @@ def SelectDataByVCID(conn,vzid):
         arrayres = []
         cursor = conn.cursor()
         queryfordatabase = regularpatsel + table + " WHERE vzid = " + vzid
-        print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
         for field in rows:
@@ -123,8 +121,6 @@ def SelectDataByVCID(conn,vzid):
         conn.cursor().close()
 
 def UpdateData(conn,sql):
-    print("connection update = ",conn)
-    print("sql update = ",sql)
     try:
 	cursor = conn.cursor()
 	cursor.execute(sql)
@@ -158,12 +154,8 @@ try:
         sys.exit(1)
     fdate = sys.argv[1]
     sdate = sys.argv[2]
-    print("fdate = ",fdate)
-    print("sdate = ",sdate)
     date_obj = datetime.datetime.strptime(fdate, date_format)
-    print("fdate = ",date_obj)
     date_obj1 = datetime.datetime.strptime(sdate, date_format)
-    print("sdate",date_obj1)
     try :
         print("Begin")
         myconnect = ReturnCursorConnect()
@@ -179,9 +171,7 @@ try:
 	    unparse_cpucycles = format(item['cpucycles']) #cpucycles
 
             VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
-            print("VSU = ",VSU)
             sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE unxtime = " + unixtime + " AND vzid = " + vzid_unparse
-            print("sqlupdate = ",sqlupdate)
             UpdateData(myconnect,sqlupdate)
     except :
         print("sql error at begin")

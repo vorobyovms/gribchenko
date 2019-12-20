@@ -47,7 +47,7 @@ def SelectDataByVCID(conn,vzid):
         arrayres = []
         cursor = conn.cursor()
         queryfordatabase = regularpatsel + table + " WHERE vzid = " + vzid
-	print("query = ",queryfordatabase)
+	#print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
         for field in rows:
@@ -71,7 +71,7 @@ def SelectDataByVCID(conn,vzid):
             jsonlocal["cpucycles"] = cpucycles
 	    jsonlocal["vzq"] = vzq
             arrayres.append(jsonlocal)
-	print("arrayres = ",arrayres)
+	#print("arrayres = ",arrayres)
         return arrayres
     except my.Error as e :
         print("error select data function select data = ",e)
@@ -81,14 +81,19 @@ def SelectDataByVCID(conn,vzid):
 #ctid, Mem, CpuCycles, CpuUsage, TpsRead, TpsWrite, VSU
 def writeToRRD(input,ctid):
     rrdPath = '%s%s_temp.rrd' % (RRDsPath, ctid)
-    print("rrdPath = ",rrdPath)
+    #print("rrdPath = ",rrdPath)
     rrdFullPath = '%s%s.rrd' % (RRDsPath, ctid)
-    print("rrdFullPath = ",rrdFullPath)
+    #print("rrdFullPath = ",rrdFullPath)
 
     try :
         os.remove(rrdPath)
     except :
-        print("error remove")
+        print("error remove tmp rrd")
+
+    try :
+        os.remove(rrdFullPath)
+    except :
+        print("error remove main rrd")
 
     if not os.path.exists(rrdPath):
         try :
@@ -107,20 +112,20 @@ def writeToRRD(input,ctid):
     #backup file create
     filebackup = RRDsPath + ctid + "_backup.xml"
     command_createbackupfile = "rrdtool dump " + rrdPath + " " + filebackup
-    print("command create backup = ",command_createbackupfile)
+    #print("command create backup = ",command_createbackupfile)
 
     #delete file main
     command_delete = "rm " + rrdPath
-    print("command delete  = ",command_delete)
+    #print("command delete  = ",command_delete)
 
 
     #backupfile restore
     command_restorefombackup = "rrdtool restore " +  filebackup + " " + rrdPath
-    print("command restore backup = ",command_restorefombackup)
+    #print("command restore backup = ",command_restorefombackup)
 
     #backupfile delete
     command_delete1 = "rm " + filebackup
-    print("command delete1  = ",command_delete1)
+    #print("command delete1  = ",command_delete1)
 
     try:
         code = os.popen(command_createbackupfile)
@@ -137,7 +142,7 @@ def writeToRRD(input,ctid):
         now = now.replace("\r","")
         now = now.replace("\t","")
         now = now.replace("\n","")
-	print("now = ",now)
+	#print("now = ",now)
 
 	#filebackup - open this file
 	filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
@@ -145,7 +150,7 @@ def writeToRRD(input,ctid):
         onchange = "<lastupdate>0</lastupdate>"
         UpdateFile(filebackup,filebackupoutput,whatchange,onchange) #update xml file for tag <lastupdate>
 	commandrename = "mv " + filebackupoutput + " " + filebackup #rename
-        print("command rename = ",commandrename)
+        #print("command rename = ",commandrename)
         try:
            code = os.popen(commandrename)
            now = code.read()
@@ -161,7 +166,7 @@ def writeToRRD(input,ctid):
     try:
         code = os.popen(command_delete)
         now = code.read()
-        print("main rrd file was deleted")
+        #print("main rrd file was deleted")
     except:
         print("can not delete main file")
         sys.exit(1)
@@ -183,11 +188,11 @@ def writeToRRD(input,ctid):
         sys.exit(1)
 
     for item in input:
-	    print("filebackup = ",filebackup)
-	    print("item = ",item)
+	    #print("filebackup = ",filebackup)
+	    #print("item = ",item)
             vzid_unparse = format(item['vzid'])           #vzid
             unixtime = format(item['unxtime'])            #unixtime
-	    print("unixtime = ",unixtime)
+	    #print("unixtime = ",unixtime)
             mem_unparse = format(item['mem'])             #mem
             usnew_unparse = format(item['us_new'])        #cpu usage
             quota_unparse = format(item['quota'])         #space db
@@ -197,12 +202,12 @@ def writeToRRD(input,ctid):
 	    VSU = format(item['vzq'])			  #vsu
 	    rrdParams = '%s:%s:%s:%s:%s:%s' % (unparse_cpucycles, usnew_unparse, mem_unparse,unparse_tpsread,unparse_tpswrite, VSU)
             rrdParams = unixtime + "@" + rrdParams
-            print("rrdparams = ",rrdParams)
+            #print("rrdparams = ",rrdParams)
 	    try:
-	       print("UPDATE FILE = ",rrdPath)
-               print("RRD PARAM = ",rrdParams)
+	       #print("UPDATE FILE = ",rrdPath)
+               #print("RRD PARAM = ",rrdParams)
                command = "rrdtool update " + rrdPath  + " " + rrdParams
-	       print("command rrd update = ",command)
+	       #print("command rrd update = ",command)
                try:
                    code = os.popen(command)
                    now = code.read()
@@ -213,20 +218,20 @@ def writeToRRD(input,ctid):
 
     #move tmd rrd to main rrd
     commandrenamerrd = "mv " + rrdPath + " " + rrdFullPath #rename
-    print("command rename = ",commandrenamerrd)
+    #print("command rename = ",commandrenamerrd)
     try:
         code = os.popen(commandrenamerrd)
         now = code.read()
     except:
         print("can not make move rrd file")
 
-print("count params = ",len(sys.argv))
+#print("count params = ",len(sys.argv))
 if len(sys.argv) < 2:
         print("Error Not all parameter")
         sys.exit(1)
 vzid = sys.argv[1]
-print("vzid = ",vzid)
-print(vzid.isdigit())
+#print("vzid = ",vzid)
+#print(vzid.isdigit())
 
 if vzid.isdigit() == True:
 
@@ -234,7 +239,7 @@ if vzid.isdigit() == True:
        print("Eto chislo")
        myconnect = ReturnCursorConnect()
        array = SelectDataByVCID(myconnect,vzid)
-       print("answer size = ",len(array))
+       #print("answer size = ",len(array))
        writeToRRD(array,vzid)
    except :
        print("sql error at begin")
