@@ -46,7 +46,7 @@ def SelectDataByVCID(conn,vzid):
     try :
         arrayres = []
         cursor = conn.cursor()
-        queryfordatabase = regularpatsel + table + " WHERE vzid = " + vzid
+        queryfordatabase = regularpatsel + table + " WHERE vzid = " + vzid + " ORDER BY unxtime"
 	#print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
@@ -146,7 +146,7 @@ def writeToRRD(input,ctid):
 
 	#filebackup - open this file
 	filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
-        whatchange = now	#our lastupdate tag
+        whatchange = now	                                    #our lastupdate tag
         onchange = "<lastupdate>0</lastupdate>"
         UpdateFile(filebackup,filebackupoutput,whatchange,onchange) #update xml file for tag <lastupdate>
 	commandrename = "mv " + filebackupoutput + " " + filebackup #rename
@@ -188,11 +188,8 @@ def writeToRRD(input,ctid):
         sys.exit(1)
 
     for item in input:
-	    #print("filebackup = ",filebackup)
-	    #print("item = ",item)
             vzid_unparse = format(item['vzid'])           #vzid
             unixtime = format(item['unxtime'])            #unixtime
-	    #print("unixtime = ",unixtime)
             mem_unparse = format(item['mem'])             #mem
             usnew_unparse = format(item['us_new'])        #cpu usage
             quota_unparse = format(item['quota'])         #space db
@@ -230,8 +227,6 @@ if len(sys.argv) < 2:
         print("Error Not all parameter")
         sys.exit(1)
 vzid = sys.argv[1]
-#print("vzid = ",vzid)
-#print(vzid.isdigit())
 
 if vzid.isdigit() == True:
 
