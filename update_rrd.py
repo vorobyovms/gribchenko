@@ -23,6 +23,18 @@ global RRDsPath
 global vctid
 RRDsPath = '/var/www/stats/rrd/'
 
+
+#filebackup - open this file
+#filebackupoutput - result after change
+#whatchange - row for change
+#onchange - value that was in result after change
+
+def UpdateFile(filebackup,filebackupoutput,whatchange,onchange):
+    data = open(filebackup).read()
+    o = open(filebackupoutput,'w')
+    o.write( re.sub(whatchange,onchange,data) )
+    o.close()
+
 def ReturnCursorConnect():
     try :
         conn = my.connect(host=host, user=username, passwd=password, db=dbname,cursorclass=MySQLdb.cursors.DictCursor)
@@ -126,12 +138,19 @@ def writeToRRD(input,ctid):
         now = now.replace("\n","")
 	print("now = ",now)
 
-        # Read in the file
-        with open(filebackup, 'r') as file :
-            filedata = file.read()
-            filedata = filedata.replace(now, '<lastupdate>0</lastupdate>')
-        with open(filebackup, 'w') as file:
-            file.write(filedata)
+	#filebackup - open this file
+	filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
+        whatchange = now	#our lastupdate tag
+        onchange = "<lastupdate>0</lastupdate>"
+        UpdateFile(filebackup,filebackupoutput,whatchange,onchange) #update xml file for tag <lastupdate>
+	commandrename = "mv " + filebackupoutput + " " + filebackup #rename
+        print("command rename = ",commandrename)
+        try:
+           code = os.popen(commandrename)
+           now = code.read()
+        except:
+           print("can not make backupfile")
+           sys.exit(1)
 
     except:
         print("can not change field")
@@ -141,6 +160,7 @@ def writeToRRD(input,ctid):
     try:
         code = os.popen(command_delete)
         now = code.read()
+        print("main rrd file was deleted")
     except:
         print("can not delete main file")
         sys.exit(1)
@@ -182,7 +202,7 @@ def writeToRRD(input,ctid):
 	    try:
 	       print("UPDATE FILE = ",rrdPath)
                print("RRD PARAM = ",rrdParams)
-               command = "rrdtool update -s " + rrdPath  + " " + rrdParams
+               command = "rrdtool update " + rrdPath  + " " + rrdParams
 	       print("command rrd update = ",command)
                try:
                    code = os.popen(command)
