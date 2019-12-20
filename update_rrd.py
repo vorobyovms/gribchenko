@@ -47,7 +47,6 @@ def SelectDataByVCID(conn,vzid):
         arrayres = []
         cursor = conn.cursor()
         queryfordatabase = regularpatsel + table + " WHERE vzid = " + vzid
-        #queryfordatabase = regularpatsel + table + " WHERE vzid = 888"
 	print("query = ",queryfordatabase)
         cursor.execute(queryfordatabase)
         rows = cursor.fetchall()
@@ -81,8 +80,10 @@ def SelectDataByVCID(conn,vzid):
 
 #ctid, Mem, CpuCycles, CpuUsage, TpsRead, TpsWrite, VSU
 def writeToRRD(input,ctid):
-    rrdPath = '%s%s.rrd' % (RRDsPath, ctid)
+    rrdPath = '%s%s_temp.rrd' % (RRDsPath, ctid)
     print("rrdPath = ",rrdPath)
+    rrdFullPath = '%s%s.rrd' % (RRDsPath, ctid)
+    print("rrdFullPath = ",rrdFullPath)
 
     try :
         os.remove(rrdPath)
@@ -181,8 +182,6 @@ def writeToRRD(input,ctid):
         print("can not delete backup file")
         sys.exit(1)
 
-
-
     for item in input:
 	    print("filebackup = ",filebackup)
 	    print("item = ",item)
@@ -211,6 +210,15 @@ def writeToRRD(input,ctid):
                    print("can not make rrd update")
             except:
     	        print("error update")
+
+    #move tmd rrd to main rrd
+    commandrenamerrd = "mv " + rrdPath + " " + rrdFullPath #rename
+    print("command rename = ",commandrenamerrd)
+    try:
+        code = os.popen(commandrenamerrd)
+        now = code.read()
+    except:
+        print("can not make move rrd file")
 
 print("count params = ",len(sys.argv))
 if len(sys.argv) < 2:
