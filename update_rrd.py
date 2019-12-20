@@ -204,7 +204,7 @@ def writeToRRD(input,ctid):
 	    try:
 	       #print("UPDATE FILE = ",rrdPath)
                #print("RRD PARAM = ",rrdParams)
-               command = "rrdtool update -s " + rrdPath  + " " + rrdParams
+               command = "rrdtool update " + rrdPath  + " " + rrdParams
 	       #print("command rrd update = ",command)
                try:
                    code = os.popen(command)
