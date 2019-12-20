@@ -21,8 +21,8 @@ update_vsu = "vzq"
 time_field = "time"
 global RRDsPath
 global vctid
-RRDsPath = '/var/www/stats/rrd/'
-
+#RRDsPath = '/var/www/stats/rrd/'
+RRDsPath = '/dev/shm/'
 
 #filebackup - open this file
 #filebackupoutput - result after change
@@ -145,7 +145,8 @@ def writeToRRD(input,ctid):
 	#print("now = ",now)
 
 	#filebackup - open this file
-	filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
+	filebackupoutput = "/dev/shm/" + ctid + "-output.xml"
+        #filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
         whatchange = now	                                    #our lastupdate tag
         onchange = "<lastupdate>0</lastupdate>"
         UpdateFile(filebackup,filebackupoutput,whatchange,onchange) #update xml file for tag <lastupdate>
@@ -203,7 +204,7 @@ def writeToRRD(input,ctid):
 	    try:
 	       #print("UPDATE FILE = ",rrdPath)
                #print("RRD PARAM = ",rrdParams)
-               command = "rrdtool update " + rrdPath  + " " + rrdParams
+               command = "rrdtool update -s " + rrdPath  + " " + rrdParams
 	       #print("command rrd update = ",command)
                try:
                    code = os.popen(command)
@@ -215,7 +216,7 @@ def writeToRRD(input,ctid):
 
     #move tmd rrd to main rrd
     commandrenamerrd = "mv " + rrdPath + " " + rrdFullPath #rename
-    #print("command rename = ",commandrenamerrd)
+    print("command rename = ",commandrenamerrd)
     try:
         code = os.popen(commandrenamerrd)
         now = code.read()
