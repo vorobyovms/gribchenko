@@ -131,9 +131,7 @@ def UpdateData(conn,sql):
         conn.cursor().close()
 
 
-def FormulaUpdate(Mem,CpuUsage,Space):
-    CpuNum = getCpuNum()
-    CpuMhz = getCpuMHz()
+def FormulaUpdate(Mem,CpuUsage,Space,CpuNum,CpuMhz):
     try :
         SigMem = float(Mem) / 1024 / 1024 / 1024
         SigMemX = -0.00128996 * (SigMem ** 4) + 0.0618164 * (SigMem ** 3) - 0.657332 * (SigMem ** 2) + 4.04564 * SigMem - 1.12624
@@ -148,6 +146,8 @@ def FormulaUpdate(Mem,CpuUsage,Space):
 
 try:
     vctid = []
+    CpuNum = getCpuNum()
+    CpuMhz = getCpuMHz()
     date_format = '%Y-%m-%d'
     if len(sys.argv) < 3:
         print("Error Not all parameter")
@@ -169,7 +169,6 @@ try:
 	    unparser_tpsread = format(item['tpsread'])    #tpsread
 	    unparse_tpswrite = format(item['tpswrite'])   #tpswrite
 	    unparse_cpucycles = format(item['cpucycles']) #cpucycles
-
             VSU = FormulaUpdate(mem_unparse,usnew_unparse,quota_unparse)
             sqlupdate = "UPDATE " + table + " SET " + update_vsu + " = " + str(VSU) + " WHERE unxtime = " + unixtime + " AND vzid = " + vzid_unparse
             UpdateData(myconnect,sqlupdate)
