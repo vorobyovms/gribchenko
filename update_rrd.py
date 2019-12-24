@@ -10,6 +10,8 @@ import subprocess
 import rrdtool
 import datetime
 import fileinput
+from xml.etree import ElementTree
+
 
 host = "127.0.0.1"
 dbname = "vtl"
@@ -35,12 +37,28 @@ def UpdateFile(filebackup,filebackupoutput,whatchange,onchange):
     o.write( re.sub(whatchange,onchange,data) )
     o.close()
 
-def UpdateDatabaseData(filebackup,destfile,stringrow):
-    tree = ElementTree.parse(filebackup)
-    w = tree.find('.//database')
-    row = ElementTree.SubElement(w, "row")
-    row.text = stringrow
-    tree.write(open(destfile, 'w'))
+def UpdateRRD(filebackup,destfile,first,second,third,fourth,fifth,sixth):
+    try:
+        tree = ElementTree.parse(filebackup)
+        w = tree.find('.//database')
+        row = ElementTree.SubElement(w, "row")
+
+	#array
+        data1 = []
+        data1.append(first)
+        data1.append(second)
+        data1.append(third)
+        data1.append(fourth)
+        data1.append(fifth)
+        data1.append(sixth)
+
+        for item in data1:
+            v = ElementTree.SubElement(row,"v")
+            v.text = str(item)
+            tree.write(open(destfile, 'w'))
+
+    except:
+        print("error update xml")
 
 def ReturnCursorConnect():
     try :
@@ -225,10 +243,8 @@ def writeToRRD(input,ctid):
 	    rrdParams = '%s:%s:%s:%s:%s:%s' % (unparse_cpucycles, usnew_unparse, mem_unparse,unparse_tpsread,unparse_tpswrite, VSU)
             rrdParams = unixtime + "@" + rrdParams
 	    string = "<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>"
-            print("string = ",string)
-	    UpdateDatabaseData(filebackup1,filebackupoutput,string)
+	    UpdateRRD(filebackup1,filebackupoutput,unparse_cpucycles,usnew_unparse,mem_unparse,unparse_tpsread,unparse_tpswrite,VSU)
 
-    #move tmd rrd to main rrd
     commandrenamerrd = "mv " + rrdPath + " " + rrdFullPath #rename
     print("command rename = ",commandrenamerrd)
     sys.exit(1)
