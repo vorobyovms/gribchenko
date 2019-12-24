@@ -21,8 +21,8 @@ update_vsu = "vzq"
 time_field = "time"
 global RRDsPath
 global vctid
-#RRDsPath = '/var/www/stats/rrd/'
-RRDsPath = '/dev/shm/'
+RRDsPath = '/var/www/stats/rrd/'
+#RRDsPath = '/dev/shm/'
 
 #filebackup - open this file
 #filebackupoutput - result after change
@@ -34,6 +34,13 @@ def UpdateFile(filebackup,filebackupoutput,whatchange,onchange):
     o = open(filebackupoutput,'w')
     o.write( re.sub(whatchange,onchange,data) )
     o.close()
+
+def UpdateDatabaseData(filebackup,destfile,stringrow):
+    tree = ElementTree.parse(filebackup)
+    w = tree.find('.//database')
+    row = ElementTree.SubElement(w, "row")
+    row.text = stringrow
+    tree.write(open(destfile, 'w'))
 
 def ReturnCursorConnect():
     try :
@@ -114,6 +121,12 @@ def writeToRRD(input,ctid):
     command_createbackupfile = "rrdtool dump " + rrdPath + " " + filebackup
     #print("command create backup = ",command_createbackupfile)
 
+    #delete all object in tag database
+    filebackup1 = RRDsPath + ctid + "_backup1.xml"
+    #print("filebackup1 = ",filebackup1)
+    command_deleteobjectsindatabasetag = "sed '/<database>/,/<\/database>/{//!d}' " + filebackup + " > " + filebackup1 #remove all values from <database> and </database>
+    #print("command_deleteobjectsindatabasetag = ",command_deleteobjectsindatabasetag)
+
     #delete file main
     command_delete = "rm " + rrdPath
     #print("command delete  = ",command_delete)
@@ -134,6 +147,16 @@ def writeToRRD(input,ctid):
         print("can not make backupfile")
 	sys.exit(1)
 
+    #remove data between tag database
+    try:
+        code = os.popen(command_deleteobjectsindatabasetag)
+        now = code.read()
+        #print("command deleteobjectsindatabasetag was done")
+    except:
+        print("can not delete data between tag database")
+        sys.exit(1)
+
+    #sys.exit(1)
     #change field
     command_lastupdate = "rrdtool dump " + rrdPath + " | grep lastupdate"
     try:
@@ -145,8 +168,8 @@ def writeToRRD(input,ctid):
 	#print("now = ",now)
 
 	#filebackup - open this file
-	filebackupoutput = "/dev/shm/" + ctid + "-output.xml"
-        #filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
+	#filebackupoutput = "/dev/shm/" + ctid + "-output.xml"
+        filebackupoutput = "/var/www/stats/rrd/" + ctid + "-output.xml"
         whatchange = now	                                    #our lastupdate tag
         onchange = "<lastupdate>0</lastupdate>"
         UpdateFile(filebackup,filebackupoutput,whatchange,onchange) #update xml file for tag <lastupdate>
@@ -188,6 +211,7 @@ def writeToRRD(input,ctid):
         print("can not delete backup file")
         sys.exit(1)
 
+    arrayresrows = []
     for item in input:
             vzid_unparse = format(item['vzid'])           #vzid
             unixtime = format(item['unxtime'])            #unixtime
@@ -200,23 +224,15 @@ def writeToRRD(input,ctid):
 	    VSU = format(item['vzq'])			  #vsu
 	    rrdParams = '%s:%s:%s:%s:%s:%s' % (unparse_cpucycles, usnew_unparse, mem_unparse,unparse_tpsread,unparse_tpswrite, VSU)
             rrdParams = unixtime + "@" + rrdParams
-            #print("rrdparams = ",rrdParams)
-	    try:
-	       #print("UPDATE FILE = ",rrdPath)
-               #print("RRD PARAM = ",rrdParams)
-               command = "rrdtool update " + rrdPath  + " " + rrdParams
-	       #print("command rrd update = ",command)
-               try:
-                   code = os.popen(command)
-                   now = code.read()
-	       except:
-                   print("can not make rrd update")
-            except:
-    	        print("error update")
+	    string = "<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>"
+            print("string = ",string)
+	    UpdateDatabaseData(filebackup1,filebackupoutput,string)
 
     #move tmd rrd to main rrd
     commandrenamerrd = "mv " + rrdPath + " " + rrdFullPath #rename
     print("command rename = ",commandrenamerrd)
+    sys.exit(1)
+
     try:
         code = os.popen(commandrenamerrd)
         now = code.read()
