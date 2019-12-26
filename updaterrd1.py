@@ -107,85 +107,24 @@ def FormatStructXMLFile(filename):
     rrd["lastupdate"] = "0"
 
     #___________________________TAGS DS__________________________________________
-    ds_us = {}                                                          #json object
-    ds_new = {}
-    ds_mem = {}
-    ds_tpswrite = {}
-    ds_tpsread = {}
-    ds_sigma = {}
 
     all_ds = []
-
-    ds_us["name"] = "us"
-    ds_us["type"] = "GAUGE"
-    ds_us["minimal_heartbeat"] = "600"
-    ds_us["min"] = "NaN"
-    ds_us["max"] = "NaN"
-    ds_us["comment"] = "<!-- PDP Status -->"
-    ds_us["last_ds"] = "U"
-    ds_us["value"] = "NaN"
-    ds_us["unknown_sec"] = "0"
-    all_ds.append(ds_us)
-
-    #ds_new
-    ds_new["name"] = "us_new"
-    ds_new["type"] = "GAUGE"
-    ds_new["minimal_heartbeat"] = "600"
-    ds_new["min"] = "NaN"
-    ds_new["max"] = "NaN"
-    ds_new["comment"] = "<!-- PDP Status -->"
-    ds_new["last_ds"] = "U"
-    ds_new["value"] = "NaN"
-    ds_new["unknown_sec"] = "0"
-    all_ds.append(ds_new)
-
-    #ds_mem
-    ds_mem["name"] = "mem"
-    ds_mem["type"] = "GAUGE"
-    ds_mem["minimal_heartbeat"] = "600"
-    ds_mem["min"] = "NaN"
-    ds_mem["max"] = "NaN"
-    ds_mem["comment"] = "<!-- PDP Status -->"
-    ds_mem["last_ds"] = "U"
-    ds_mem["value"] = "NaN"
-    ds_mem["unknown_sec"] = "0"
-    all_ds.append(ds_mem)
-
-    #ds_tpswrite
-    ds_tpswrite["name"] = "tpswrite"
-    ds_tpswrite["type"] = "GAUGE"
-    ds_tpswrite["minimal_heartbeat"] = "600"
-    ds_tpswrite["min"] = "NaN"
-    ds_tpswrite["max"] = "NaN"
-    ds_tpswrite["comment"] = "<!-- PDP Status -->"
-    ds_tpswrite["last_ds"] = "U"
-    ds_tpswrite["value"] = "NaN"
-    ds_tpswrite["unknown_sec"] = "0"
-    all_ds.append(ds_tpswrite)
-
-    #ds_tpsread
-    ds_tpsread["name"] = "tpsread"
-    ds_tpsread["type"] = "GAUGE"
-    ds_tpsread["minimal_heartbeat"] = "600"
-    ds_tpsread["min"] = "NaN"
-    ds_tpsread["max"] = "NaN"
-    ds_tpsread["comment"] = "<!-- PDP Status -->"
-    ds_tpsread["last_ds"] = "U"
-    ds_tpsread["value"] = "NaN"
-    ds_tpsread["unknown_sec"] = "0"
-    all_ds.append(ds_tpsread)
-
-    #ds_sigma
-    ds_sigma["name"] = "sigma"
-    ds_sigma["type"] = "GAUGE"
-    ds_sigma["minimal_heartbeat"] = "600"
-    ds_sigma["min"] = "NaN"
-    ds_sigma["max"] = "NaN"
-    ds_sigma["comment"] = "<!-- PDP Status -->"
-    ds_sigma["last_ds"] = "U"
-    ds_sigma["value"] = "NaN"
-    ds_sigma["unknown_sec"] = "0"
-    all_ds.append(ds_sigma)
+    paramsname = ["us","us_new","mem","tpswrite","tpsread","sigma"]
+    print("params name size = ",len(paramsname))
+    a = 0
+    while a < len(paramsname):
+        dstemp = {}
+        dstemp["name"] = paramsname[a]
+        dstemp["type"] = "GAUGE"
+        dstemp["minimal_heartbeat"] = "600"
+        dstemp["min"] = "NaN"
+        dstemp["max"] = "NaN"
+        dstemp["comment"] = "<!-- PDP Status -->"
+        dstemp["last_ds"] = "U"
+        dstemp["value"] = "NaN"
+        dstemp["unknown_sec"] = "0"
+        all_ds.append(dstemp)
+        a = a + 1
 
     rrd["ds"] = all_ds #put array ds in json rrd
     print("result rrd = ", rrd)
