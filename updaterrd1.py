@@ -93,6 +93,46 @@ def CreateXMLFile(vzctid):
         sys.exit(1)
     return filename
 
+#-------------------------------------------------------------------------------DOBAVLENIE V TAG DATABASE ALL DATA ------------------------------------
+def AddDataToDatabase(structure,array):
+    print "Call function AddDataToDatabase()"
+    structure_dump = json.dumps(structure)
+    structready = json.loads(structure_dump)
+    database_unparse = structready['rrd']['rra']['database'] 			#database tag
+
+    for item in array:
+	temp = {}
+        vzid_unparse = format(item['vzid'])           #vzid
+        temp["vzid"] = vzid_unparse
+        unixtime = format(item['unxtime'])            #unixtime
+	temp["unxtime"] = unixtime
+        mem_unparse = format(item['mem'])             #mem
+	temp["mem"] = mem_unparse
+        usnew_unparse = format(item['us_new'])        #cpu usage
+        temp["us_new"] = usnew_unparse
+        quota_unparse = format(item['quota'])         #space db
+	temp["quota"] = quota_unparse
+        unparse_tpsread = format(item['tpsread'])     #tpsread
+	temp["tpsread"] = unparse_tpsread
+        unparse_tpswrite = format(item['tpswrite'])   #tpswrite
+	temp["tpswrite"] = unparse_tpswrite
+        unparse_cpucycles = format(item['cpucycles']) #cpucycles
+	temp["cpucycles"] = unparse_cpucycles
+        VSU = format(item['vzq'])                     #vsu
+	temp["vzq"] = VSU
+	structready['rrd']['rra']['database'].append(temp)
+
+    return structready
+
+#-----------------------------------------------------SOHRANENIE V FILE -----------------------------------------
+def SaveTOFile(filename,struct):
+    print("filename = ",filename)
+    obshee = ["<?xml version=\"1.0\" encoding=\"utf-8\"?>","<!DOCTYPE rrd SYSTEM \"http://oss.oetiker.ch/rrdtool/rrdtool.dtd\">","<!-- Round Robin Database Dump -->"]
+    myfile = open(filename,'w')
+    for item in obshee:
+        print("item = ",item)
+        myfile.write(item+"\n");
+    myfile.close()
 #-------------------------------------------------------------------------------FORMIROVANIE STRUKTURI XML FILE (tut na vhod daem  imya file kotoriy bil sozdan) -------------
 def FormatStructXMLFile(filename):
     print "call function FormatStructXMLFile()"
@@ -154,8 +194,8 @@ def FormatStructXMLFile(filename):
     while i < len(all_ds):
         cdp_prep = {}
         cdp_prep_withkey = {}
-        cdp_prep["primary_value"] = "0.0000000000e+00"
-        cdp_prep["secondary_value"] = "0.0000000000e+00"
+        cdp_prep["primary_value"] = "NaN"
+        cdp_prep["secondary_value"] = "NaN"
         cdp_prep["value"] = "NaN"
         cdp_prep["unknown_datapoints"] = "0"
         cdp_prep_withkey["ds"] = cdp_prep
@@ -167,10 +207,13 @@ def FormatStructXMLFile(filename):
     database = {}
     database_array = []
     rra["database"] = database_array
-    print("rra = ",rra)
+    #print("rra = ",rra)
 
     rrd["rra"] = rra
-    print("rrd = ",rrd)
+    #print("rrd = ",rrd)
+    rrd_key = {}
+    rrd_key["rrd"] = rrd
+    return rrd_key
 
 #---------------------------------------------------------------------------------------------------NACHALO --------------------------------------------------------------------
 if len(sys.argv) < 2:								#NA VHOD podaem nomer conteynera
@@ -190,7 +233,12 @@ if vzid.isdigit() == True:
        filename = CreateXMLFile(vzid)					             #sozdaem file xml
        print("after delete and create empty file ",datetime.datetime.now().time())
        if filename != "":
-           FormatStructXMLFile(filename)
+           structure = FormatStructXMLFile(filename)
+           print("structure = ",structure)
+	   print("time after create empty structure = ",datetime.datetime.now().time())
+           arrayafteradd = AddDataToDatabase(structure,array)
+           print("time afterr add database tag = ",datetime.datetime.now().time())
+           SaveTOFile(filename,arrayafteradd)
    except :
        print("sql error at begin")
    finally :
