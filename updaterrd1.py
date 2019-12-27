@@ -1,5 +1,7 @@
 import time
 import datetime
+import unixtime
+
 import re
 import json
 import os
@@ -10,7 +12,6 @@ import MySQLdb.cursors
 import json
 import subprocess
 import rrdtool
-import datetime
 import fileinput
 from xml.etree import ElementTree
 
@@ -207,10 +208,15 @@ def SaveTOFile(filename,struct):
         unparse_cpucycles = item['cpucycles'] #cpucycles
         VSU = format(item['vzq'])             #vsu
 
-        comment = "<!-- " + unixtime + " -->"
+        print("unixtime = ",unixtime)
+	ts = int(unixtime)
+        temptime = datetime.datetime.fromtimestamp(ts)
+	print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
+        comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
         print("comment = ",comment)
 
         stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
+        print("stringurl = ",stringurl)
         myfile.write(stringurl);
     myfile.write("\t\t</database>\n");
 
@@ -232,7 +238,7 @@ def FormatStructXMLFile(filename):
     rrd = {}
     rrd["version"] = "003"
     rrd["step"] = "300"
-    rrd["lastupdate"] = "0"
+    rrd["lastupdate"] = ""
 
     #___________________________TAGS DS__________________________________________
 
