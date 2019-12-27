@@ -144,7 +144,6 @@ def SaveTOFile(filename,struct,lunixtime):
     rrd_lastupdate = structready['rrd']['lastupdate']
     myfile.write("\t<version>"+rrd_version+"</version>\n");
     myfile.write("\t<step>"+rrd_step+"</step>\n");
-    #
 
     myfile.write("\t<lastupdate>"+str(lunixtime)+"</lastupdate>\n");
     myfile.write("\n")
@@ -209,17 +208,10 @@ def SaveTOFile(filename,struct,lunixtime):
         unparse_tpswrite = item['tpswrite']   #tpswrite
         unparse_cpucycles = item['cpucycles'] #cpucycles
         VSU = format(item['vzq'])             #vsu
-
-        #print("unixtime = ",unixtime)
 	ts = int(unixtime)
         temptime = datetime.datetime.fromtimestamp(ts)
-	#print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
-        #comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
         comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " -->"
-        #print("comment = ",comment)
-
         stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
-        #print("stringurl = ",stringurl)
         myfile.write(stringurl);
     myfile.write("\t\t</database>\n");
 
@@ -249,13 +241,10 @@ def SaveTOFile(filename,struct,lunixtime):
     cdp_prep = structready['rrd']['rra']['cdp_prep']
     myfile.write("\t\t<cdp_prep>\n");
     for item_cdp in cdp_prep:
-        #print item_cdp
         for key1,value1 in item_cdp.items():
-            #print key1,value1
             myfile.write("\t\t\t<"+key1+">\n");
 
             for key2,value2 in value1.items():
-                #print("itemv = ",key2,value2)
                 myfile.write("\t\t\t\t<"+key2+">"+value2+"</"+key2+">\n");
 
             myfile.write("\t\t\t</"+key1+">\n");
@@ -275,18 +264,11 @@ def SaveTOFile(filename,struct,lunixtime):
         unparse_tpswrite = item['tpswrite']   #tpswrite
         unparse_cpucycles = item['cpucycles'] #cpucycles
         VSU = format(item['vzq'])             #vsu
-
         print("unixtime = ",unixtime)
         ts = int(unixtime)
         temptime = datetime.datetime.fromtimestamp(ts)
-        #print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
-        #comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
-        #comment = "<!--" + temptime.strftime('%Y-%m-%d %H:%M:%S') + "-->"
         comment = "<!--" + unixtime + "-->"
-        #print("comment = ",comment)
-
-        stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
-        #print("stringurl = ",stringurl)
+        stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpswrite+"</v><v>"+unparse_tpsread+"</v><v>"+VSU+"</v></row>\n"
         myfile.write(stringurl);
 
     myfile.write("\t\t</database>\n");
