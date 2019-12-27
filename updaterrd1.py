@@ -126,14 +126,14 @@ def AddDataToDatabase(structure,array):
     return structready
 
 #-----------------------------------------------------SOHRANENIE V FILE -----------------------------------------
-def SaveTOFile(filename,struct):
+def SaveTOFile(filename,struct,lunixtime):
     print("filename = ",filename)
     structure_dump = json.dumps(structure)
     structready = json.loads(structure_dump)
     obshee = ["<?xml version=\"1.0\" encoding=\"utf-8\"?>","<!DOCTYPE rrd SYSTEM \"http://oss.oetiker.ch/rrdtool/rrdtool.dtd\">","<!-- Round Robin Database Dump -->"]
     myfile = open(filename,'w')
     for item in obshee:
-        print("item = ",item)
+        #print("item = ",item)
         myfile.write(item+"\n");
 
     #<rrd> -> rrd.version -> rrd.step -> rrd.lastupdate
@@ -143,8 +143,10 @@ def SaveTOFile(filename,struct):
     rrd_step = structready['rrd']['step']
     rrd_lastupdate = structready['rrd']['lastupdate']
     myfile.write("\t<version>"+rrd_version+"</version>\n");
-    myfile.write("\t<step>"+rrd_version+"</step>\n");
-    myfile.write("\t<lastupdate>"+rrd_lastupdate+"</lastupdate>\n");
+    myfile.write("\t<step>"+rrd_step+"</step>\n");
+    #
+
+    myfile.write("\t<lastupdate>"+str(lunixtime)+"</lastupdate>\n");
     myfile.write("\n")
 
     #ds tag
@@ -181,13 +183,79 @@ def SaveTOFile(filename,struct):
     cdp_prep = structready['rrd']['rra']['cdp_prep']
     myfile.write("\t\t<cdp_prep>\n");
     for item_cdp in cdp_prep:
-        print item_cdp
+        #print item_cdp
         for key1,value1 in item_cdp.items():
-            print key1,value1
+            #print key1,value1
             myfile.write("\t\t\t<"+key1+">\n");
 
             for key2,value2 in value1.items():
-                print("itemv = ",key2,value2)
+                #print("itemv = ",key2,value2)
+                myfile.write("\t\t\t\t<"+key2+">"+value2+"</"+key2+">\n");
+
+            myfile.write("\t\t\t</"+key1+">\n");
+    myfile.write("\t\t</cdp_prep>\n");
+
+    #database
+    myfile.write("\t\t<database>\n");
+    database = struct['rrd']['rra']['database']
+
+    for item in database:
+        vzid_unparse = item['vzid']           #vzid
+        unixtime = item['unxtime']            #unixtime
+        mem_unparse = item['mem']             #mem
+        usnew_unparse = item['us_new']        #cpu usage
+        quota_unparse = item['quota']         #space db
+        unparse_tpsread = item['tpsread']     #tpsread
+        unparse_tpswrite = item['tpswrite']   #tpswrite
+        unparse_cpucycles = item['cpucycles'] #cpucycles
+        VSU = format(item['vzq'])             #vsu
+
+        #print("unixtime = ",unixtime)
+	ts = int(unixtime)
+        temptime = datetime.datetime.fromtimestamp(ts)
+	#print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
+        #comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
+        comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " -->"
+        #print("comment = ",comment)
+
+        stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
+        #print("stringurl = ",stringurl)
+        myfile.write(stringurl);
+    myfile.write("\t\t</database>\n");
+
+    #end rra
+    myfile.write("\t</rra>\n");
+
+    #--------------------------------------RRA AGAIN------------------------------------------------------------------------------------------------------------------------
+    myfile.write("\t<rra>\n");
+    rra = structready['rrd']['rra']
+
+    #cf
+    cf = structready['rrd']['rra']['cf']
+    myfile.write("\t\t<cf>"+cf+"</cf>\n");
+
+    #pdp_per_row
+    pdp_per_row = structready['rrd']['rra']['pdp_per_row']
+    myfile.write("\t\t<pdp_per_row>"+pdp_per_row+"</pdp_per_row>\n")
+
+    #params
+    params = structready['rrd']['rra']['params']
+    myfile.write("\t\t<params>\n");
+    for key1,value1 in params.items():
+        myfile.write("\t\t\t<"+key1+">"+value1+"</"+key1+">\n");
+    myfile.write("\t\t</params>\n");
+
+    #cdp_prep
+    cdp_prep = structready['rrd']['rra']['cdp_prep']
+    myfile.write("\t\t<cdp_prep>\n");
+    for item_cdp in cdp_prep:
+        #print item_cdp
+        for key1,value1 in item_cdp.items():
+            #print key1,value1
+            myfile.write("\t\t\t<"+key1+">\n");
+
+            for key2,value2 in value1.items():
+                #print("itemv = ",key2,value2)
                 myfile.write("\t\t\t\t<"+key2+">"+value2+"</"+key2+">\n");
 
             myfile.write("\t\t\t</"+key1+">\n");
@@ -209,20 +277,25 @@ def SaveTOFile(filename,struct):
         VSU = format(item['vzq'])             #vsu
 
         print("unixtime = ",unixtime)
-	ts = int(unixtime)
+        ts = int(unixtime)
         temptime = datetime.datetime.fromtimestamp(ts)
-	print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
-        comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
-        print("comment = ",comment)
+        #print("temptime = ",temptime.strftime('%Y-%m-%d %H:%M:%S'))
+        #comment = "<!-- " + temptime.strftime('%Y-%m-%d %H:%M:%S') + " EET / " + unixtime + " -->"
+        #comment = "<!--" + temptime.strftime('%Y-%m-%d %H:%M:%S') + "-->"
+        comment = "<!--" + unixtime + "-->"
+        #print("comment = ",comment)
 
         stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
-        print("stringurl = ",stringurl)
+        #print("stringurl = ",stringurl)
         myfile.write(stringurl);
+
     myfile.write("\t\t</database>\n");
 
     #end rra
     myfile.write("\t</rra>\n");
 
+
+    #--------------------------------------END RRA AGAIN --------------------------------------------------------------------------------------------------------------------
     #end rrd
     myfile.write("</rrd>");
 
@@ -320,6 +393,12 @@ if vzid.isdigit() == True:
        print("Eto chislo")
        myconnect = ReturnConnect() 				                     #Vizavaem viborku select s tablici
        array = SelectDataByVCID(myconnect,vzid)                                      #poluchaem resultat
+
+       timelast = len(array)
+       print("time last = ",timelast)
+       lunixtime = array[timelast-1]['unxtime']
+       print("lunuxtime for send = ",lunixtime)
+
        print("select size = ",len(array))                                            #pechataem dlinnu polichennogo
        print("SQL QUERY FINISHED = ",datetime.datetime.now().time())                 #pechataem vremya tekushee - dlya togo chtobi ponimat skolko proshlo vremeni
        DeleteXMLFile(vzid)							     #udalyaem file xml
@@ -331,7 +410,7 @@ if vzid.isdigit() == True:
 	   print("time after create empty structure = ",datetime.datetime.now().time())
            arrayafteradd = AddDataToDatabase(structure,array)
            print("time afterr add database tag = ",datetime.datetime.now().time())
-           SaveTOFile(filename,arrayafteradd)
+           SaveTOFile(filename,arrayafteradd,lunixtime)
    except :
        print("sql error at begin")
    finally :
