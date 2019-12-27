@@ -205,10 +205,14 @@ def SaveTOFile(filename,struct):
         unparse_tpsread = item['tpsread']     #tpsread
         unparse_tpswrite = item['tpswrite']   #tpswrite
         unparse_cpucycles = item['cpucycles'] #cpucycles
-        VSU = format(item['vzq'])                     #vsu
-        stringurl = "\t\t\t\t<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
+        VSU = format(item['vzq'])             #vsu
+
+        comment = "<!-- " + unixtime + " -->"
+        print("comment = ",comment)
+
+        stringurl = "\t\t\t\t"+comment+"<row><v>"+unparse_cpucycles+"</v><v>"+usnew_unparse+"</v><v>"+mem_unparse+"</v><v>"+unparse_tpsread+"</v><v>"+unparse_tpswrite+"</v><v>"+VSU+"</v></row>\n"
         myfile.write(stringurl);
-    myfile.write("\t\t<\database>\n");
+    myfile.write("\t\t</database>\n");
 
     #end rra
     myfile.write("\t</rra>\n");
@@ -243,7 +247,6 @@ def FormatStructXMLFile(filename):
         dstemp["minimal_heartbeat"] = "600"
         dstemp["min"] = "NaN"
         dstemp["max"] = "NaN"
-        dstemp["comment"] = "<!-- PDP Status -->"
         dstemp["last_ds"] = "U"
         dstemp["value"] = "NaN"
         dstemp["unknown_sec"] = "0"
