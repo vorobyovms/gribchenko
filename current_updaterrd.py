@@ -23,7 +23,7 @@ table = "vzstat"        								#table for select
 username = "vorobyov"									#username for database
 password = "rfmd2EAA1997"								#password
 regularpatsel = "SELECT vzq,tpsread,tpswrite,us,vzid,unxtime,mem,us_new,quota From "    #part of sql query
-update_vsu = "vzq"									#field for update vsu in table
+update_vsu = "sigma"									#field for update vsu in table
 time_field = "time"									#field time in database
 global RRDsPath										#RRD Path
 RRDsPath = '/var/www/stats/rrd/'
