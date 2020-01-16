@@ -16,7 +16,8 @@ table = "vzstat"
 username = "vorobyov"
 password = "rfmd2EAA1997"
 regularpatsel = "SELECT vzq,tpsread,tpswrite,us,vzid,unxtime,mem,us_new,quota From "
-update_vsu = "vzq"
+#update_vsu = "vzq"
+update_vsu = "sigma"
 time_field = "time"
 global RRDsPath
 global vctid
